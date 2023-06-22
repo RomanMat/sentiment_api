@@ -22,3 +22,8 @@ It will be available at http://localhost:8080
     ```uvicorn api:app```
 
 It will be available at http://127.0.0.1:8000
+
+### Available Endpoints
+* ```GET``` ```/api/``` - default endpoint that returns analysed reviews of Meat & Greet cafe in Prague
+* ```POST``` ```/api/analyse``` - returns analysis of custom message sent
+* ```POST``` ```/api/yelp``` - returns analysed reviews of certain business in specified location
