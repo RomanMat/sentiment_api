@@ -1,8 +1,9 @@
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import asyncio
 
 
-def analyse(message):
+async def async_analyse(message):
     # Instantiate Model and Tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
         "nlptown/bert-base-multilingual-uncased-sentiment"
@@ -22,7 +23,5 @@ def analyse(message):
     return int(torch.argmax(result.logits)) + 1
 
 
-if __name__ == "__main__":
-    message = input("Enter message")
-    sentiment = analyse(message)
-    print(sentiment)
+async def analyse(message):
+    return await asyncio.create_task(async_analyse(message))

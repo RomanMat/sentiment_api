@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+import asyncio
+
 from scraper import fetch_reviews
 from sentiment_analyser import analyse
 
@@ -21,15 +23,21 @@ async def analyse_default():
     """Analyse sentiment of last 10 reviews of Meat and Greet cafe in Prague."""
 
     reviews = fetch_reviews()
-    reviews["sentiment"] = reviews["reviews"].apply(lambda x: analyse(x[:512]))
-    return reviews.to_json()
+    # reviews["sentiment"] = reviews["reviews"].apply(
+    #     lambda x: asyncio.run(analyse(x[:512]))
+    # )
+    tasks = [asyncio.create_task(analyse(x[:512])) for x in reviews["reviews"]]
+    results = await asyncio.gather(*tasks)
+
+    reviews["sentiment"] = results
+    return reviews.to_dict()
 
 
 @app.post("/api/analyse")
 async def analyse_message(message: Message):
     """Analyse sentiment of given message."""
 
-    sentiment_score = analyse(message.Text)
+    sentiment_score = await analyse(message.Text)
     return {"message": message.Text, "sentiment_score": sentiment_score}
 
 
@@ -44,8 +52,12 @@ async def analyse_business(business_props: Business):
     except ValueError:
         raise HTTPException(status_code=404, detail="Business not found")
 
-    reviews["sentiment"] = reviews["reviews"].apply(lambda x: analyse(x[:512]))
-
+    # reviews["sentiment"] = reviews["reviews"].apply(
+    #     lambda x: asyncio.run(analyse(x[:512]))
+    # )
+    tasks = [asyncio.create_task(analyse(x[:512])) for x in reviews["reviews"]]
+    results = await asyncio.gather(*tasks)
+    reviews["sentiment"] = results
     reviews = reviews.to_dict()
     reviews["business"] = business_props.Name
     reviews["location"] = business_props.Location
